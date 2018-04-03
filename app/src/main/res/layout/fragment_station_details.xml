@@ -1,0 +1,67 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:gravity="center"
+        android:text="Station Detail"
+        android:textSize="22sp" />
+
+    <TextView
+        android:id="@+id/lbl_station_easting_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="bottom"
+        android:text="Easting:"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColorPrimary="#B6B6B6" />
+
+    <TextView
+        android:id="@+id/lbl_station_easting"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="easting"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
+
+    <TextView
+        android:id="@+id/lbl_station_northing_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="bottom"
+        android:text="Northing:"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColorPrimary="#B6B6B6" />
+
+    <TextView
+        android:id="@+id/lbl_station_northing"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="northing"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
+
+    <TextView
+        android:id="@+id/lbl_station_desc_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="bottom"
+        android:text="Station Description:"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColorPrimary="#B6B6B6" />
+
+    <TextView
+        android:id="@+id/lbl_station_desc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="description"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
+
+    <Button
+        android:id="@+id/btn_edit_station"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:text="Edit Station" />
+
+</LinearLayout>
