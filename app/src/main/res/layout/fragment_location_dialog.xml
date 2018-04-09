@@ -29,6 +29,14 @@
         android:text="Station: "/>
 
     <TextView
+        android:id="@+id/lbl_dialog_location"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Notification.Info"
+        android:text="Location: " />
+
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"

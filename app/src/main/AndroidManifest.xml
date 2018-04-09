@@ -11,6 +11,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity android:name=".ui.activities.StationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -18,7 +19,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".services.GPSService" />
+
+        <service android:name=".services.LocationUpdatesIntentService"
+            android:exported="false"/>
+
+        <receiver android:name="com.caldera.geomapping.geomapping.services.LocationUpdatesBroadcastReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.caldera.geomapping.geomapping.services.LocationUpdatesBroadcastReceiver.ACTION_PROCESS_UPDATES"/>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
