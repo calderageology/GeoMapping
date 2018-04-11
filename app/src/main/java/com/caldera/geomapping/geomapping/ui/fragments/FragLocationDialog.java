@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +17,12 @@ import android.widget.TextView;
 
 import com.caldera.geomapping.geomapping.R;
 import com.caldera.geomapping.geomapping.models.objects.Station;
+import com.caldera.geomapping.geomapping.services.LocationRequestHelper;
 import com.caldera.geomapping.geomapping.services.LocationResultHelper;
 import com.caldera.geomapping.geomapping.tasks.ReadFromDatabase;
+import com.caldera.geomapping.geomapping.ui.activities.StationActivity;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.util.ArrayList;
 
@@ -25,13 +31,16 @@ import java.util.ArrayList;
  * Created by Michael on 15/11/2017.
  */
 //TODO Have the app start the location service from the main activity and update the dialog textviews with Lat/Long/Acc when the dialog is created.
-public class FragLocationDialog extends DialogFragment {
+public class FragLocationDialog extends DialogFragment implements
+        GoogleApiClient.OnConnectionFailedListener,
+        SharedPreferences.OnSharedPreferenceChangeListener{
+
     private FragmentLocationDialogCallback callback;
 
     /**
      * Stores parameters for requests to the FusedLocationProviderApi.
      */
-
+    public String TAG = getClass().getSimpleName();
 
     Context activityContext;
 
@@ -55,9 +64,19 @@ public class FragLocationDialog extends DialogFragment {
         return fragment;
     }
 
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
     public interface FragmentLocationDialogCallback {
         void onAcceptAccuracyClicked(Station station);
+        void requestLocationUpdates();
+        boolean isGoogleApiClientConnected();
+        void removeLocationUpdates();
     }
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,12 +99,6 @@ public class FragLocationDialog extends DialogFragment {
 
         return v;
     }
-
-
-        //TODO rebuild location service
-
-
-
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -128,6 +141,35 @@ public class FragLocationDialog extends DialogFragment {
         }else{
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        PreferenceManager.getDefaultSharedPreferences(getActivity())
+                .registerOnSharedPreferenceChangeListener((SharedPreferences.OnSharedPreferenceChangeListener) getActivity());
+
+        if(callback.isGoogleApiClientConnected()) {
+            Log.i(TAG, "GoogleApiClient is connected");
+            callback.requestLocationUpdates();
+        }
+        try {
+            locationText.setText(LocationResultHelper.getSavedLocationResult(getActivity()));
+            Log.i(TAG, "location result not null");
+        } catch (NullPointerException e) {
+            Log.e(TAG, "the saved results are empty");
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        if (s.equals(LocationResultHelper.KEY_LOCATION_UPDATES_RESULT)) {
+            Log.i("PreferencesChanged", "broadcast sent");
+            locationText.setText(LocationResultHelper.getSavedLocationResult(getActivity()));
+        } else if (s.equals(LocationRequestHelper.KEY_LOCATION_UPDATES_REQUESTED)) {
+            Log.i("PreferencesChanged", "broadcast not sent");
         }
     }
 

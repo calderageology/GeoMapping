@@ -100,31 +100,65 @@ public class StationActivity extends AppCompatActivity implements
      */
     private GoogleApiClient mGoogleApiClient;
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_station);
 
+        locationText = (TextView) findViewById(R.id.lbl_activity_location);
 
         // Check if the user revoked runtime permissions.
         if (!checkPermissions()) {
             requestPermissions();
         }
-
         buildGoogleApiClient();
-
-
 
         manager = getSupportFragmentManager();
         loadStationList();
+    }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this);
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this);
+
+        if(mGoogleApiClient.isConnected()) {
+            Log.i("onResume", "GoogleApiClient is connected");
+            requestLocationUpdates();
+        }
+        try {
+            locationText.setText(LocationResultHelper.getSavedLocationResult(this));
+            Log.i("onResume", "location result not null");
+        } catch (NullPointerException e) {
+            locationText.setText("Establishing position...");
+            Log.e("onResume", "the saved results are empty");
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onDestroy () {
+        super.onDestroy();
+        Log.i(TAG, "Activity is destroyed");
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
+
+        if(mGoogleApiClient.isConnected()) {
+            removeLocationUpdates();
+        }
     }
 
     private void buildGoogleApiClient() {
-        if (mGoogleApiClient != null) {
+        if (isGoogleApiClientConnected()) {
             return;
         }
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -133,6 +167,13 @@ public class StationActivity extends AppCompatActivity implements
                 .addApi(LocationServices.API)
                 .build();
         createLocationRequest();
+    }
+
+    public boolean isGoogleApiClientConnected (){
+        if(mGoogleApiClient != null){
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -148,20 +189,6 @@ public class StationActivity extends AppCompatActivity implements
      * These settings are appropriate for mapping applications that show real-time location
      * updates.
      */
-    private void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-
-        mLocationRequest.setInterval(UPDATE_INTERVAL);
-
-        // Sets the fastest rate for active location updates. This interval is exact, and your
-        // application will never receive updates faster than this value.
-        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        // Sets the maximum time when batched location updates are delivered. Updates may be
-        // delivered sooner than this interval.
-        mLocationRequest.setMaxWaitTime(MAX_WAIT_TIME);
-    }
 
     private void loadStationList() {
         ReadFromDatabase reader = new ReadFromDatabase(getApplicationContext());
@@ -170,7 +197,6 @@ public class StationActivity extends AppCompatActivity implements
             public void setQueryComplete(ArrayList result){
                 listData = result;
                 loadListFragment();
-
             }
         });
         reader.execute();
@@ -203,8 +229,7 @@ public class StationActivity extends AppCompatActivity implements
 
     @Override
     public void onAddStationButtonClicked() {
-        requestLocationUpdates();
-        LocationRequestHelper.getRequesting(this);
+
 
         /**
          * This is where the FragLocationDialog should appear overtop of the FragStationList and
@@ -250,10 +275,7 @@ public class StationActivity extends AppCompatActivity implements
             }
         });
         writer.execute();
-
     }
-
-    //TODO Shutdown location service when the activity is stopped
 
     @Override
     public void onBackPressed(){
@@ -413,43 +435,22 @@ public class StationActivity extends AppCompatActivity implements
         }
     }
 
+    private void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
 
+        mLocationRequest.setInterval(UPDATE_INTERVAL);
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(this);
+        // Sets the fastest rate for active location updates. This interval is exact, and your
+        // application will never receive updates faster than this value.
+        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        if(mGoogleApiClient.isConnected()) {
-            requestLocationUpdates();
-        }
-
-    }
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        try {
-            locationText.setText(LocationResultHelper.getSavedLocationResult(this));
-            Log.i("onResume", "The location text is: " + locationText.toString());
-        } catch (NullPointerException e) {
-            Log.e("onResume", "the saved results are empty");
-            e.printStackTrace();
-        }
+        // Sets the maximum time when batched location updates are delivered. Updates may be
+        // delivered sooner than this interval.
+        mLocationRequest.setMaxWaitTime(MAX_WAIT_TIME);
     }
 
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .unregisterOnSharedPreferenceChangeListener(this);
-
-        if(mGoogleApiClient.isConnected()) {
-            removeLocationUpdates();
-        }
-    }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
@@ -457,12 +458,13 @@ public class StationActivity extends AppCompatActivity implements
             Log.i("PreferencesChanged", "broadcast sent");
             locationText.setText(LocationResultHelper.getSavedLocationResult(this));
         } else if (s.equals(LocationRequestHelper.KEY_LOCATION_UPDATES_REQUESTED)) {
+            locationText.setText("Establishing position...");
             Log.i("PreferencesChanged", "broadcast not sent");
         }
     }
 
     /**
-     * Start updating location
+     * Start updating locations
      */
     public void requestLocationUpdates() {
         try {
@@ -485,9 +487,6 @@ public class StationActivity extends AppCompatActivity implements
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient,
         getPendingIntent());
     }
-
-
-
 }
 
 
