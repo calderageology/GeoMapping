@@ -9,12 +9,14 @@ import android.location.Location;
 public class Deg2UTM {
     double easting;
     double northing;
+    double elevation;
     int zone;
     char letter;
 
     public Deg2UTM(Location location) {
         double lat = location.getLatitude();
         double lon = location.getLongitude();
+        double ele = location.getAltitude();
 
         zone = (int) Math.floor(lon / 6 + 31);
         if (lat < -72) letter = 'C';
@@ -44,6 +46,8 @@ public class Deg2UTM {
         if (letter < 'M')
             northing = northing + 10000000;
         northing = Math.round(northing * 100) * 0.01;
+
+        elevation = Math.round(ele * 100) * 0.01;
     }
 
     public double getEasting() {
@@ -52,6 +56,10 @@ public class Deg2UTM {
 
     public double getNorthing() {
         return northing;
+    }
+
+    public double getElevation() {
+        return elevation;
     }
 }
 

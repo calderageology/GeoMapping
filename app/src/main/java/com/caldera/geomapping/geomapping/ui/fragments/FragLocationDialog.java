@@ -3,11 +3,7 @@ package com.caldera.geomapping.geomapping.ui.fragments;
 import android.app.DialogFragment;
 import android.content.Context;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,12 +13,7 @@ import android.widget.TextView;
 
 import com.caldera.geomapping.geomapping.R;
 import com.caldera.geomapping.geomapping.models.objects.Station;
-import com.caldera.geomapping.geomapping.services.LocationRequestHelper;
-import com.caldera.geomapping.geomapping.services.LocationResultHelper;
 import com.caldera.geomapping.geomapping.tasks.ReadFromDatabase;
-import com.caldera.geomapping.geomapping.ui.activities.StationActivity;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.util.ArrayList;
 
@@ -30,10 +21,8 @@ import java.util.ArrayList;
 /**
  * Created by Michael on 15/11/2017.
  */
-//TODO Have the app start the location service from the main activity and update the dialog textviews with Lat/Long/Acc when the dialog is created.
-public class FragLocationDialog extends DialogFragment implements
-        GoogleApiClient.OnConnectionFailedListener,
-        SharedPreferences.OnSharedPreferenceChangeListener{
+//TODO change the dialog textviews with Easting and Northing when location updates
+public class FragLocationDialog extends DialogFragment {
 
     private FragmentLocationDialogCallback callback;
 
@@ -45,7 +34,7 @@ public class FragLocationDialog extends DialogFragment implements
     Context activityContext;
 
     //UI Elements
-    TextView stationNumber, accuracyText, locationText;
+    TextView stationNumber, locationText;
     Button proceed, cancel;
 
 
@@ -53,7 +42,7 @@ public class FragLocationDialog extends DialogFragment implements
 
 
     Station lastStation, newStation;
-    String stationNumberString, accuracy, easting, northing, location, precisionString;
+    String stationNumberString, easting, northing;
     int oldStationNumber;
 
     public FragLocationDialog() {
@@ -64,16 +53,9 @@ public class FragLocationDialog extends DialogFragment implements
         return fragment;
     }
 
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
 
     public interface FragmentLocationDialogCallback {
         void onAcceptAccuracyClicked(Station station);
-        void requestLocationUpdates();
-        boolean isGoogleApiClientConnected();
-        void removeLocationUpdates();
     }
 
 
@@ -93,7 +75,7 @@ public class FragLocationDialog extends DialogFragment implements
 
         stationNumber = (TextView) v.findViewById(R.id.lbl_dialog_station_number);
         locationText = (TextView) v.findViewById(R.id.lbl_dialog_location);
-        accuracyText = (TextView) v.findViewById(R.id.lbl_dialog_accuracy);
+
         proceed = (Button) v.findViewById(R.id.btn_dialog_proceed);
         cancel = (Button) v.findViewById(R.id.btn_dialog_cancel);
 
@@ -144,34 +126,13 @@ public class FragLocationDialog extends DialogFragment implements
         }
     }
 
+    //FIXME textViews are not updating. May have something to do with the context
     @Override
     public void onResume() {
         super.onResume();
-        PreferenceManager.getDefaultSharedPreferences(getActivity())
-                .registerOnSharedPreferenceChangeListener((SharedPreferences.OnSharedPreferenceChangeListener) getActivity());
 
-        if(callback.isGoogleApiClientConnected()) {
-            Log.i(TAG, "GoogleApiClient is connected");
-            callback.requestLocationUpdates();
-        }
-        try {
-            locationText.setText(LocationResultHelper.getSavedLocationResult(getActivity()));
-            Log.i(TAG, "location result not null");
-        } catch (NullPointerException e) {
-            Log.e(TAG, "the saved results are empty");
-            e.printStackTrace();
-        }
     }
 
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-        if (s.equals(LocationResultHelper.KEY_LOCATION_UPDATES_RESULT)) {
-            Log.i("PreferencesChanged", "broadcast sent");
-            locationText.setText(LocationResultHelper.getSavedLocationResult(getActivity()));
-        } else if (s.equals(LocationRequestHelper.KEY_LOCATION_UPDATES_REQUESTED)) {
-            Log.i("PreferencesChanged", "broadcast not sent");
-        }
-    }
 
     public void loadStationNumber(){
         ReadFromDatabase reader = new ReadFromDatabase(getActivity().getApplicationContext());
@@ -201,7 +162,7 @@ public class FragLocationDialog extends DialogFragment implements
      * calculate the distance (in m) the @para location is to the average and
      * report as precision. Convert precision to string and return.
      */
-    //TODO getLocationPrecision method needs to take easting northing instead of lat/long
+    //TODO getLocationPrecision method needs to take easting northing. create GeoMaths class
 /**    public String getLocationPrecision (Location currentLocation){
         //calculate the average
         if(precisionList == null){
