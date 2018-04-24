@@ -33,11 +33,13 @@ public class StationDatabase {
     private static final String COLUMN_STATION_NUMBER = "station_number";
     private static final String COLUMN_EASTING = "easting";
     private static final String COLUMN_NORTHING = "northing";
+    private static final String COLUMN_ELEVATION = "elevation";
+    private static final String COLUMN_TIME = "time";
     private static final String COLUMN_STATION_DESCRIPTION = "description";
     private static final String COLUMN_STATION_DATA = "data";
 
     /**
-     * - DATABASE_VERSION is to be incremented up by 1 (we'll, I think it just needs to be a larger
+     * - DATABASE_VERSION is to be incremented up by 1 (well, I think it just needs to be a larger
      * number...but I don't see the point in testing that theory), each time we change the schema,
      * or structure of the Database.
      * - DATABASE_NAME is simply the file name of our Database. We can use the file name in our
@@ -45,7 +47,7 @@ public class StationDatabase {
      * "pre-load" data into your database.
      */
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "stations.db";
     private static final String TEXT = " TEXT";
     private static final int INTEGER = 1;
@@ -146,6 +148,8 @@ public class StationDatabase {
 
                     val.put(COLUMN_EASTING, station.getStationEasting());
                     val.put(COLUMN_NORTHING, station.getStationNorthing());
+                    val.put(COLUMN_ELEVATION, station.getStationElevation());
+                    val.put(COLUMN_TIME, station.getStationTime());
                     val.put(COLUMN_STATION_DESCRIPTION, station.getStationDescription());
                     val.put(COLUMN_STATION_DATA, gson.toJson(station, Station.class));
 
@@ -171,6 +175,8 @@ public class StationDatabase {
         val.put(COLUMN_STATION_NUMBER, station.getStationNumber());
         val.put(COLUMN_EASTING, station.getStationEasting());
         val.put(COLUMN_NORTHING, station.getStationNorthing());
+        val.put(COLUMN_ELEVATION, station.getStationElevation());
+        val.put(COLUMN_TIME, station.getStationTime());
         val.put(COLUMN_STATION_DESCRIPTION, station.getStationDescription());
         val.put(COLUMN_STATION_DATA, gson.toJson(station, Station.class));
 
@@ -188,9 +194,11 @@ public class StationDatabase {
         private static final String SQL_CREATE_ENTRIES = "CREATE TABLE " + TABLE_NAME + " (" +
                 COLUMN_ENTRY_ID + " INTEGER PRIMARY KEY," +
                 COLUMN_STATION_NUMBER + TEXT + COMMA_SEP +
-                COLUMN_STATION_DESCRIPTION + TEXT + COMMA_SEP +
                 COLUMN_EASTING + TEXT + COMMA_SEP +
                 COLUMN_NORTHING + TEXT + COMMA_SEP +
+                COLUMN_ELEVATION + TEXT + COMMA_SEP +
+                COLUMN_TIME + TEXT + COMMA_SEP +
+                COLUMN_STATION_DESCRIPTION + TEXT + COMMA_SEP +
                 COLUMN_STATION_DATA + TEXT +
                 " )";
 

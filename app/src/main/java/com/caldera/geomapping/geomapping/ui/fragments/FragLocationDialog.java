@@ -3,7 +3,10 @@ package com.caldera.geomapping.geomapping.ui.fragments;
 import android.app.DialogFragment;
 import android.content.Context;
 
+import android.content.DialogInterface;
+import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +16,9 @@ import android.widget.TextView;
 
 import com.caldera.geomapping.geomapping.R;
 import com.caldera.geomapping.geomapping.models.objects.Station;
+import com.caldera.geomapping.geomapping.services.LocationAssistant;
+import com.caldera.geomapping.geomapping.tasks.Deg2UTM;
+import com.caldera.geomapping.geomapping.tasks.GeoMath;
 import com.caldera.geomapping.geomapping.tasks.ReadFromDatabase;
 
 import java.util.ArrayList;
@@ -21,8 +27,8 @@ import java.util.ArrayList;
 /**
  * Created by Michael on 15/11/2017.
  */
-//TODO change the dialog textviews with Easting and Northing when location updates
-public class FragLocationDialog extends DialogFragment {
+
+public class FragLocationDialog extends DialogFragment implements LocationAssistant.Listener{
 
     private FragmentLocationDialogCallback callback;
 
@@ -34,15 +40,20 @@ public class FragLocationDialog extends DialogFragment {
     Context activityContext;
 
     //UI Elements
-    TextView stationNumber, locationText;
+    TextView stationNumber, eastingText, northingText, precisionText;
     Button proceed, cancel;
 
 
     ArrayList<Station> listData;
+    LocationAssistant assistant;
+    ArrayList<Location> locations = new ArrayList<>();
+    Location avgLocation;
 
 
     Station lastStation, newStation;
-    String stationNumberString, easting, northing;
+    double easting, northing, elevation;
+    long time;
+    String stationNumberString;
     int oldStationNumber;
 
     public FragLocationDialog() {
@@ -54,6 +65,8 @@ public class FragLocationDialog extends DialogFragment {
     }
 
 
+
+
     public interface FragmentLocationDialogCallback {
         void onAcceptAccuracyClicked(Station station);
     }
@@ -62,6 +75,12 @@ public class FragLocationDialog extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        assistant = new LocationAssistant(getActivity(), this, LocationAssistant.Accuracy.HIGH, 1000, false);
+        assistant.setVerbose(true);
+
+
+
         loadStationNumber();
 
 
@@ -74,7 +93,10 @@ public class FragLocationDialog extends DialogFragment {
         View v = inflater.inflate(R.layout.fragment_location_dialog, container, false);
 
         stationNumber = (TextView) v.findViewById(R.id.lbl_dialog_station_number);
-        locationText = (TextView) v.findViewById(R.id.lbl_dialog_location);
+        precisionText = (TextView) v.findViewById(R.id.lbl_dialog_precision);
+        eastingText = (TextView) v.findViewById(R.id.lbl_dialog_easting);
+        northingText = (TextView) v.findViewById(R.id.lbl_dialog_northing);
+
 
         proceed = (Button) v.findViewById(R.id.btn_dialog_proceed);
         cancel = (Button) v.findViewById(R.id.btn_dialog_cancel);
@@ -85,6 +107,7 @@ public class FragLocationDialog extends DialogFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
 
 
         stationNumber.setText(stationNumberString);
@@ -100,10 +123,12 @@ public class FragLocationDialog extends DialogFragment {
             @Override
             public void onClick(View v) {
                 try{
-                    newStation = new Station("","","");
+                    newStation = new Station("","","","","","");
                     newStation.setStationNumber(stationNumberString);
-                    newStation.setStationEasting(easting);
-                    newStation.setStationNorthing(northing);
+                    newStation.setStationEasting(String.valueOf(easting));
+                    newStation.setStationNorthing(String.valueOf(northing));
+                    newStation.setStationElevation(String.valueOf(elevation));
+                    newStation.setStationTime(String.valueOf(time));
                     callback.onAcceptAccuracyClicked(newStation);
 
                 } catch (Exception e) {
@@ -126,11 +151,15 @@ public class FragLocationDialog extends DialogFragment {
         }
     }
 
-    //FIXME textViews are not updating. May have something to do with the context
     @Override
     public void onResume() {
         super.onResume();
-
+        assistant.start();
+    }
+    @Override
+    public void onPause() {
+        super.onPause();
+        assistant.stop();
     }
 
 
@@ -156,63 +185,82 @@ public class FragLocationDialog extends DialogFragment {
         reader.execute();
     }
 
-    /**
-     * take a locations @para and add the easting, northing, and elevation
-     * to an arraylist and calculate the average location from the list. Then
-     * calculate the distance (in m) the @para location is to the average and
-     * report as precision. Convert precision to string and return.
-     */
-    //TODO getLocationPrecision method needs to take easting northing. create GeoMaths class
-/**    public String getLocationPrecision (Location currentLocation){
-        //calculate the average
-        if(precisionList == null){
-            ArrayList<Location> precisionList = new ArrayList<>();
-            precisionList.add(currentLocation);
-            return "na";
-        }
-        precisionList.add(currentLocation);
+    @Override
+    public void onNeedLocationPermission() {
 
-        double averageLatitude = 0.0;
-        double averageLongitude = 0.0;
-        double averageElevation = 0.0;
-        for(int i = 0; i <= precisionList.size(); i++){
-            averageLatitude += precisionList.get(i).getLatitude();
-            averageLongitude += precisionList.get(i).getLongitude();
-            averageElevation += precisionList.get(i).getAltitude();
+    }
+
+    @Override
+    public void onExplainLocationPermission() {
+
+    }
+
+    @Override
+    public void onLocationPermissionPermanentlyDeclined(View.OnClickListener fromView, DialogInterface.OnClickListener fromDialog) {
+
+    }
+
+    @Override
+    public void onNeedLocationSettingsChange() {
+
+    }
+
+    @Override
+    public void onFallBackToSystemSettings(View.OnClickListener fromView, DialogInterface.OnClickListener fromDialog) {
+
+    }
+
+    @Override
+    public void onNewLocationAvailable(Location location) {
+        if (location == null) return;
+
+        GeoMath geoMath = new GeoMath();
+
+        try{
+            locations.add(location);
+            if(locations.size() <= 4){
+                precisionText.setText("Hold still, averaging your location from " + locations.size() + " readings.");
+
+            }else {
+                double precision = geoMath.getPrecision(locations, location);
+
+                avgLocation = geoMath.getAverageLocation(locations);
+
+                easting = new Deg2UTM(avgLocation).getEasting();
+                northing = new Deg2UTM(avgLocation).getNorthing();
+                elevation = avgLocation.getAltitude();
+                time = avgLocation.getTime();
+
+                eastingText.setOnClickListener(null);
+                northingText.setOnClickListener(null);
+                eastingText.setText(easting + "E");
+                northingText.setText(northing + "N");
+                precisionText.setText("Reading " + locations.size() + " is " + precision + "m from the average.");
+                eastingText.setAlpha(1.0f);
+                northingText.setAlpha(1.0f);
+                precisionText.setAlpha(1.0f);
+                eastingText.animate().alpha(0.5f).setDuration(400);
+                northingText.animate().alpha(0.5f).setDuration(400);
+                precisionText.animate().alpha(0.5f).setDuration(400);
+
 
             }
-        averageLocation.setLatitude(averageLatitude);
-        averageLocation.setLongitude(averageLongitude);
-        averageLocation.setAltitude(averageElevation);
+        }catch(NullPointerException e){
+            Log.e(TAG,"Locations is null ", e);
+        }
 
-        double currentEasting = new Deg2UTM(currentLocation).getEasting();
-        double currentNorthing = new Deg2UTM(currentLocation).getNorthing();
-        double currentElevation = currentLocation.setAltitude();
-
-        double averageEasting = new Deg2UTM(averageLocation).getEasting();
-        double averageNorthing = new Deg2UTM(averageLocation).getNorthing();
-
-
-        return precisionString;
     }
- */
-    /**
-     * Ensures that only one button is enabled at any time. The Start Updates button is enabled
-     * if the user is not requesting location updates. The Stop Updates button is enabled if the
-     * user is requesting location updates.
-     */
-    /**
-     *  private void updateButtonsState(boolean requestingLocationUpdates) {
-        if (requestingLocationUpdates) {
-        mRequestUpdatesButton.setEnabled(false);
-        mRemoveUpdatesButton.setEnabled(true);
-        } else {
-        mRequestUpdatesButton.setEnabled(true);
-        mRemoveUpdatesButton.setEnabled(false);
-        }
-        }
 
-     */
 
+
+    @Override
+    public void onMockLocationsDetected(View.OnClickListener fromView, DialogInterface.OnClickListener fromDialog) {
+
+    }
+
+    @Override
+    public void onError(LocationAssistant.ErrorType type, String message) {
+
+    }
 
 }

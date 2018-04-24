@@ -58,6 +58,7 @@ public class LocationAssistant implements  GoogleApiClient.ConnectionCallbacks, 
         SETTINGS, RETRIEVAL
     }
 
+    private final String TAG = getClass().getSimpleName();
     private final int REQUEST_CHECK_SETTINGS = 0;
     private final int REQUEST_LOCATION_PERMISSION = 1;
 
@@ -165,6 +166,7 @@ public class LocationAssistant implements  GoogleApiClient.ConnectionCallbacks, 
     }
 
     public Location getBestLocation(){
+        Log.i(TAG, "bestLocation: " + bestLocation.getLatitude() + bestLocation.getLongitude());
         return bestLocation;
     }
 
@@ -509,8 +511,10 @@ public class LocationAssistant implements  GoogleApiClient.ConnectionCallbacks, 
         }
 
         bestLocation = location;
-        if (listener != null)
+
+        if (listener != null) {
             listener.onNewLocationAvailable(location);
+        }
         else if (!quiet)
             Log.w(getClass().getSimpleName(), "New location is available, but no listener is registered!\n" +
                     "Specify a valid listener when constructing " + getClass().getSimpleName() +

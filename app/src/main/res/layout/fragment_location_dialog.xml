@@ -4,45 +4,98 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="20dp"
         android:layout_gravity="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Notification.Title"
         android:id="@+id/lbl_dialog_title"
         android:text="Creating Station"/>
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:orientation="horizontal">
+
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="start"
         android:textAppearance="@style/TextAppearance.AppCompat.Notification.Info"
         android:id="@+id/lbl_dialog_station_number"
         android:text="Station: "/>
 
     <TextView
-        android:id="@+id/lbl_dialog_location"
-        android:layout_width="match_parent"
+        android:id="@+id/lbl_dialog_precision"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+
+
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:layout_gravity="start"
         android:textAppearance="@style/TextAppearance.AppCompat.Notification.Info"
-        android:text="Location: " />
+        android:text="Precision: " />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="24dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/lbl_dialog_easting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:textAppearance="@style/TextAppearance.AppCompat.Notification.Info"
+            android:text="Location: " />
+
+        <TextView
+            android:id="@+id/lbl_dialog_northing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="8dp"
+            android:layout_gravity="start"
+            android:textAppearance="@style/TextAppearance.AppCompat.Notification.Info"
+            android:text="" />
+
+    </LinearLayout>
+
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="8dp">
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:id="@+id/btn_dialog_cancel"
-            android:text="Cancel"/>
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:gravity="end"
+            android:text="Cancel" />
 
         <Button
             android:id="@+id/btn_dialog_proceed"
+            style="?android:attr/borderlessButtonStyle"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
+            android:gravity="end"
+            android:paddingLeft="8dp"
+            android:paddingStart="8dp"
             android:text="Proceed" />
 
     </LinearLayout>

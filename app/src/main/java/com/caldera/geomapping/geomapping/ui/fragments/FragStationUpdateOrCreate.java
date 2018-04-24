@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
 
 import com.caldera.geomapping.geomapping.R;
@@ -25,12 +26,10 @@ public class FragStationUpdateOrCreate extends Fragment {
     private static final String STATION = "STATION";
 
     private Station station;
-    private EditText easting, northing;
-    private TextView stationNumber, eastingTitle, northingTitle;
+    private MultiAutoCompleteTextView description;
+    private TextView stationNumber, easting, northing, time, elevation;
     private Button done;
 
-    private BroadcastReceiver broadcastReceiver;
-    private String location;
 
     private FragmentStationUpdateOrCreateCallback callback;
 
@@ -51,18 +50,6 @@ public class FragStationUpdateOrCreate extends Fragment {
         return fragment;
     }
 
-    /**
-     * When we wish to create a new station object to be added to the database, we'll use this method
-     * to get an instance of the fragment. With the creation of the FragLocationDialog there may be
-     * no need for a new instance of FragStationUpdateOrCreate that does not pass in a station object.
-     * The FragLocationDialog can create a new station with only the location data and all other fields
-     * blank. then pass that to the FragStationUpdateOrCreate to edit the other fields.
-     * @return
-     */
-    public static FragStationUpdateOrCreate newInstance() {
-        FragStationUpdateOrCreate fragment = new FragStationUpdateOrCreate();
-        return fragment;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -71,7 +58,7 @@ public class FragStationUpdateOrCreate extends Fragment {
             this.station = getArguments().getParcelable(STATION);
         } else {
 
-            station = new Station("", "", "");
+            station = new Station("", "", "","","","");
         }
     }
 
@@ -82,13 +69,16 @@ public class FragStationUpdateOrCreate extends Fragment {
 /**
  * replace views
  */
-        View v = inflater.inflate(R.layout.fragment_station_update_or_create, container, false);
-        stationNumber = (TextView) v.findViewById(R.id.lbl_station_number);
-        eastingTitle = (TextView) v.findViewById(R.id.lbl_station_easting);
-        easting = (EditText) v.findViewById(R.id.edt_station_easting);
-        northingTitle = (TextView) v.findViewById(R.id.lbl_station_northing);
-        northing = (EditText) v.findViewById(R.id.edt_station_northing);
-        done = (Button) v.findViewById(R.id.btn_done);
+        View v = inflater.inflate(R.layout.fragment_station_edit, container, false);
+        stationNumber = (TextView) v.findViewById(R.id.lbl_edit_station_number);
+        easting = (TextView) v.findViewById(R.id.lbl_edit_easting);
+        northing = (TextView) v.findViewById(R.id.lbl_edit_northing);
+        elevation = (TextView) v.findViewById(R.id.lbl_edit_elevation);
+        time = (TextView) v.findViewById(R.id.lbl_edit_time);
+        description = (MultiAutoCompleteTextView) v.findViewById(R.id.edt_edit_description);
+
+
+        done = (Button) v.findViewById(R.id.btn_edit_done);
 
         return v;
     }
@@ -102,15 +92,21 @@ public class FragStationUpdateOrCreate extends Fragment {
 
         //TODO need to use String.Format to maintain decimal position
 
-        stationNumber.setText("Station: " + station.getStationNumber());
-        easting.setText(station.getStationEasting());
-        northing.setText(station.getStationNorthing());
+        stationNumber.setText("Station Number: " + station.getStationNumber());
+        easting.setText(station.getStationEasting() + "m E");
+        northing.setText(station.getStationNorthing() + "m N");
+        elevation.setText(station.getStationElevation() + "m ASL");
+        time.setText(station.getStationTime());
+        description.setText(station.getStationDescription());
 
         done.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                station.setStationNorthing(northing.getText().toString());
-                station.setStationEasting(easting.getText().toString());
+            //    station.setStationNorthing(northing.getText().toString());
+            //    station.setStationEasting(easting.getText().toString());
+            //    station.setStationElevation(elevation.getText().toString());
+            //    station.setStationTime(time.getText().toString());
+                station.setStationDescription(description.getText().toString());
                 callback.onDoneButtonClick(station);
             }
         });
